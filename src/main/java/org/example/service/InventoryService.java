@@ -25,6 +25,6 @@ public class InventoryService {
 
 
     public List<ProductInfoDTO> addProduct(ProductInfo productInfo) {
-        return inventoryMapper.toProductDTOs()
+        return null;
     }
 }
