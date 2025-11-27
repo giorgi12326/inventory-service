@@ -28,6 +28,7 @@ public class InventoryService {
     public InventoryResponseDTO addInventory(InventoryRequestDTO inventoryRequestDTO) {
         Inventory inventory = inventoryMapper.toEntity(inventoryRequestDTO);
         inventoryRepository.persistAndFlush(inventory);
+        System.out.println(inventory.getId());
         return inventoryMapper.toDTO(inventory);
     }
 }
