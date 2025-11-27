@@ -2,12 +2,12 @@ package org.example.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.ApplicationPath;
 import org.example.dto.InventoryResponseDTO;
+import org.example.dto.ProductInfoDTO;
+import org.example.entity.ProductInfo;
 import org.example.mapper.InventoryMapper;
 import org.example.repository.InventoryRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped()
@@ -20,11 +20,11 @@ public class InventoryService {
     InventoryMapper inventoryMapper;
 
     public List<InventoryResponseDTO> getInventories() {
-        return inventoryRepository.findAll()
-                .stream()
-                .map(inventoryMapper::toDTO)
-                .toList();
-
+        return inventoryMapper.toDTOs(inventoryRepository.findAll().list());
     }
 
+
+    public List<ProductInfoDTO> addProduct(ProductInfo productInfo) {
+        return inventoryMapper.toProductDTOs()
+    }
 }
