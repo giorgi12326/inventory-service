@@ -1,13 +1,30 @@
-# Stage 1: build
-FROM quay.io/quarkus/ubi-quarkus-maven:3.3 as build
+# Stage 1: build the application
+FROM eclipse-temurin:17-jdk AS build
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn package -Pnative -DskipTests -Dquarkus.native.container-build=true
 
-# Stage 2: run native binary
-FROM quay.io/quarkus/ubi9-quarkus-micro-image:2.0
+# Copy maven files and download dependencies first (for caching)
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+RUN ./mvnw dependency:go-offline
+
+# Copy the rest of the project
+COPY src ./src
+
+# Build the Quarkus app in production mode
+RUN ./mvnw package -DskipTests
+
+# Stage 2: run the application
+FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY --from=build /app/target/*-runner /app/application
+
+# Copy the jar from the build stage
+COPY --from=build /app/target/quarkus-app/lib/ /app/lib/
+COPY --from=build /app/target/quarkus-app/*.jar /app/
+COPY --from=build /app/target/quarkus-app/app/ /app/app/
+COPY --from=build /app/target/quarkus-app/quarkus/ /app/quarkus/
+
+# Expose default Quarkus port
 EXPOSE 8080
-CMD ["./application", "-Dquarkus.http.host=0.0.0.0"]
+
+# Run Quarkus
+CMD ["java", "-jar", "quarkus-run.jar"]
