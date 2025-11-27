@@ -22,7 +22,6 @@ public class InventoryController {
     }
     @POST
     public Response addInventory(InventoryRequestDTO inventoryRequestDTO) {
-        System.out.println(inventoryRequestDTO); // test if it's parsed
         return Response.status(Response.Status.CREATED).entity(inventoryService.addInventory(inventoryRequestDTO)).build();
     }
 
