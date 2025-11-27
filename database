@@ -1,0 +1,25 @@
+
+    create sequence inventory_SEQ start with 1 increment by 50;
+
+    create sequence product_info_SEQ start with 1 increment by 50;
+
+    create table inventory (
+        createdAt timestamp(6),
+        id bigint not null,
+        updatedAt timestamp(6),
+        location varchar(255) check ((location in ('DISTRICT_A','DISTRICT_B','DISTRICT_C','DISTRICT_D'))),
+        primary key (id)
+    );
+
+    create table product_info (
+        id bigint not null,
+        inventory_id bigint,
+        productId bigint,
+        quantity bigint,
+        primary key (id)
+    );
+
+    alter table if exists product_info 
+       add constraint FK5fdbathpm3oqajgabqfxli2f8 
+       foreign key (inventory_id) 
+       references inventory;
