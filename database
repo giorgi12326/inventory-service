@@ -1,9 +1,9 @@
 
-    create sequence inventory_SEQ start with 1 increment by 50;
+    create sequence Inventory_SEQ start with 1 increment by 50;
 
-    create sequence product_info_SEQ start with 1 increment by 50;
+    create sequence ProductInfo_SEQ start with 1 increment by 50;
 
-    create table inventory (
+    create table Inventory (
         createdAt timestamp(6),
         id bigint not null,
         updatedAt timestamp(6),
@@ -11,7 +11,7 @@
         primary key (id)
     );
 
-    create table product_info (
+    create table ProductInfo (
         id bigint not null,
         inventory_id bigint,
         productId bigint,
@@ -19,7 +19,7 @@
         primary key (id)
     );
 
-    alter table if exists product_info 
-       add constraint FK5fdbathpm3oqajgabqfxli2f8 
+    alter table if exists ProductInfo 
+       add constraint FKj4701fvtm8lbd48bgnsmlagyf 
        foreign key (inventory_id) 
-       references inventory;
+       references Inventory;

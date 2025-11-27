@@ -21,7 +21,10 @@ public class InventoryController {
         return Response.ok(inventoryService.getInventories()).build();
     }
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response addInventory(InventoryRequestDTO inventoryRequestDTO) {
+        System.out.println(inventoryRequestDTO); // test if it's parsed
         return Response.status(Response.Status.CREATED).entity(inventoryService.addInventory(inventoryRequestDTO)).build();
     }
 

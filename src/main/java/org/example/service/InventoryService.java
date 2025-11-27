@@ -2,6 +2,7 @@ package org.example.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.example.dto.InventoryRequestDTO;
 import org.example.dto.InventoryResponseDTO;
 import org.example.entity.Inventory;
@@ -23,6 +24,7 @@ public class InventoryService {
         return inventoryMapper.toDTOs(inventoryRepository.findAll().list());
     }
 
+    @Transactional
     public InventoryResponseDTO addInventory(InventoryRequestDTO inventoryRequestDTO) {
         Inventory inventory = inventoryMapper.toEntity(inventoryRequestDTO);
         inventoryRepository.persist(inventory);
