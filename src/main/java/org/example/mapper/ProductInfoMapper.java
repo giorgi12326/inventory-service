@@ -14,6 +14,7 @@ public interface ProductInfoMapper {
     ProductInfoDTO toDTO(ProductInfo inventory);
     List<ProductInfoDTO> toDTOs(List<ProductInfo> inventory);
 
+
     ProductInfo toEntity(ProductInfoDTO inventory);
 
 
