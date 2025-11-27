@@ -27,7 +27,7 @@ public class InventoryService {
     @Transactional
     public InventoryResponseDTO addInventory(InventoryRequestDTO inventoryRequestDTO) {
         Inventory inventory = inventoryMapper.toEntity(inventoryRequestDTO);
-        inventoryRepository.persist(inventory);
+        inventoryRepository.persistAndFlush(inventory);
         return inventoryMapper.toDTO(inventory);
     }
 }
