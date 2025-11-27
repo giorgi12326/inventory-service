@@ -8,7 +8,6 @@ import java.util.List;
 
 
 @Entity
-@Table(name = "inventory")
 public class Inventory extends PanacheEntity {
     @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductInfo> productId;
