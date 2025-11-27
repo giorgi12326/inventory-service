@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-deploy
+  template:
+    metadata:
+      labels:
+        app: inventory-deploy
+    spec:
+      containers:
+        - name: inventory-service
+          image: inventory-service-image:COMMIT_HASH
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: postgres4-0.postgres4
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: myuser
+            - name: DB_PASSWORD
+              value: mypassword
+            - name: DB_NAME
+              value: mydb
+            - name: USER_SERVICE_URL
+              value: "http://user-service:8080"
+            - name: ORDER_SERVICE_URL
+              value: "http://order-service:8081"
