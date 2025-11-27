@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class InventoryResponseDTO {
+    private Long id;
     private Location location;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
