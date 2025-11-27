@@ -1,5 +1,12 @@
-*
-!target/*-runner
-!target/*-runner.jar
-!target/lib/*
-!target/quarkus-app/*
+# Ignore everything except what we need
+target/
+*.log
+*.iml
+.idea/
+.git/
+
+# Keep build-essential files
+!pom.xml
+!mvnw
+!.mvn/
+!src/
