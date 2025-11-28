@@ -16,7 +16,6 @@ public interface ProductInfoMapper {
     UpdateQuantityFromInventory toQuantityDTO(ProductInfo inventory);
     List<ProductInfoDTO> toDTOs(List<ProductInfo> inventory);
 
-
     ProductInfo toEntity(ProductInfoDTO inventory);
 
 
