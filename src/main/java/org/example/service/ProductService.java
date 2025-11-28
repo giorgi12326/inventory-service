@@ -3,6 +3,8 @@ package org.example.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.example.dto.Event;
+import org.example.dto.EventType;
 import org.example.dto.ProductInfoDTO;
 import org.example.dto.UpdateQuantityFromInventory;
 import org.example.entity.Inventory;
@@ -11,6 +13,7 @@ import org.example.mapper.ProductInfoMapper;
 import org.example.repository.InventoryRepository;
 import org.example.repository.ProductInfoRepository;
 
+import java.time.Instant;
 import java.util.List;
 
 @ApplicationScoped()
@@ -54,7 +57,8 @@ public class ProductService {
         productInfoRepository.persist(productEntity);
 
         ProductInfoDTO quantityDTO = productInfoMapper.toDTO(productEntity);
-        productProducer.send(productInfoDTO);
+        Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
+        productProducer.send(event);
         return quantityDTO;
     }
 
