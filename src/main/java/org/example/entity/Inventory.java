@@ -17,13 +17,14 @@ public class Inventory extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String location;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
     @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductInfo> products;
-
-    @Enumerated(EnumType.STRING)
-    private Location  location;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
     @PrePersist
     public void prePersist() {

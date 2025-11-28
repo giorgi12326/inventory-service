@@ -2,7 +2,6 @@ package org.example.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.entity.Location;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 public class InventoryResponseDTO {
     private Long id;
-    private Location location;
+    private String location;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
