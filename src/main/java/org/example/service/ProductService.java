@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.example.dto.ProductInfoDTO;
+import org.example.dto.UpdateQuantityFromInventory;
 import org.example.entity.Inventory;
 import org.example.entity.ProductInfo;
 import org.example.mapper.ProductInfoMapper;
@@ -20,8 +21,12 @@ public class ProductService {
 
     @Inject
     ProductInfoMapper productInfoMapper;
+
     @Inject
     InventoryRepository inventoryRepository;
+
+    @Inject
+    ProductProducer productProducer;
 
 
     public List<ProductInfoDTO> getProducts() {
@@ -39,6 +44,18 @@ public class ProductService {
 
         productInfoRepository.persist(productEntity);
         return productInfoMapper.toDTO(productEntity);
+    }
+
+    @Transactional
+    public ProductInfoDTO updateProduct(UpdateQuantityFromInventory productInfoDTO) {
+        ProductInfo productEntity = productInfoRepository.findByProductId(productInfoDTO.getProductId());
+
+        productEntity.setQuantity(productInfoDTO.getQuantity());
+        productInfoRepository.persist(productEntity);
+
+        ProductInfoDTO quantityDTO = productInfoMapper.toDTO(productEntity);
+        productProducer.send(productInfoDTO);
+        return quantityDTO;
     }
 
 }

@@ -6,4 +6,7 @@ import org.example.entity.ProductInfo;
 
 @ApplicationScoped
 public class ProductInfoRepository implements PanacheRepository<ProductInfo> {
+    public ProductInfo findByProductId(Long productId) {
+        return find("productId", productId).firstResult();
+    }
 }

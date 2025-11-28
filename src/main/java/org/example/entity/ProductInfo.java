@@ -13,9 +13,10 @@ public class ProductInfo extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private Long productId;
 
-    private Long quantity;
+    private Integer quantity;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "inventory_id")
