@@ -6,8 +6,11 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.example.dto.ProductInfoDTO;
+import org.example.dto.ReserveProductDTO;
 import org.example.dto.UpdateQuantityFromInventory;
 import org.example.service.ProductService;
+
+import java.util.List;
 
 @Path("/api/product")
 @Produces(MediaType.APPLICATION_JSON)
@@ -30,6 +33,21 @@ public class ProductController {
     @Path("/quantity")
     public Response updateProductQuantity(UpdateQuantityFromInventory updateQuantityFromInventory) {
         return Response.ok(productService.updateProduct(updateQuantityFromInventory)).build();
+    }
+
+    @POST
+    @Path("/reserve")
+    public Response reserveProducts(List<ReserveProductDTO> reserveProductDTO) {
+        System.out.printf("reserveProducts: %s\n", reserveProductDTO);
+        return Response.ok(productService.getAndReserveProducts(reserveProductDTO)).build();
+    }
+
+    @POST
+    @Path("/release")
+    public Response releaseProducts(List<ReserveProductDTO> reserveProductDTO) {
+        System.out.println("releaseProducts: \n" + reserveProductDTO);
+        productService.releaseProducts(reserveProductDTO);
+        return Response.noContent().build();
     }
 }
 
