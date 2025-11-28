@@ -9,7 +9,7 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 @ApplicationScoped
 public class ProductProducer {
 
-    @Channel("products-out")          // channel name matches the property
+    @Channel("products-out")
     Emitter<UpdateQuantityFromInventory> productEmitter;
 
     public void send(UpdateQuantityFromInventory updateQuantityFromInventory) {
