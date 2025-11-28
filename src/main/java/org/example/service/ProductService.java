@@ -74,7 +74,7 @@ public class ProductService {
                 throw new IllegalStateException("Not enough stock for product " + product.getId());
 
             productInfoRepository.persist(product);
-            reserveList.add(ReserveProductDTO.builder().productId(productDTO.getProductId()).quantity(productQuantity).build());
+            reserveList.add(ReserveProductDTO.builder().productId(productDTO.getProductId()).quantity(dtoQuantity).build());
         }
 
         return reserveList;
