@@ -10,6 +10,8 @@ import org.example.mapper.ProductInfoMapper;
 import org.example.repository.InventoryRepository;
 import org.example.repository.ProductInfoRepository;
 
+import java.util.List;
+
 @ApplicationScoped()
 public class ProductService {
 
@@ -20,6 +22,11 @@ public class ProductService {
     ProductInfoMapper productInfoMapper;
     @Inject
     InventoryRepository inventoryRepository;
+
+
+    public List<ProductInfoDTO> getProducts() {
+        return productInfoMapper.toDTOs(productInfoRepository.findAll().list());
+    }
 
     @Transactional
     public ProductInfoDTO addProduct(ProductInfoDTO productInfoDTO) {
@@ -33,6 +40,5 @@ public class ProductService {
         productInfoRepository.persist(productEntity);
         return productInfoMapper.toDTO(productEntity);
     }
-
 
 }

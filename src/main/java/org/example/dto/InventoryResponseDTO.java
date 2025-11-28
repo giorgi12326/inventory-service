@@ -14,6 +14,4 @@ public class InventoryResponseDTO {
     private Location location;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<ProductInfoDTO> products;
-
 }

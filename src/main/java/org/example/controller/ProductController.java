@@ -2,10 +2,7 @@ package org.example.controller;
 
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.example.dto.ProductInfoDTO;
@@ -17,6 +14,11 @@ import org.example.service.ProductService;
 public class ProductController {
     @Inject
     ProductService productService;
+
+    @GET
+    public Response getProducts() {
+        return Response.status(Response.Status.OK).entity(productService.getProducts()).build();
+    }
 
     @POST
     public Response addProduct(ProductInfoDTO productInfoDTO) {
