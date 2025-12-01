@@ -104,7 +104,9 @@ public class ProductService {
         }
         productInfoRepository.persist(productList);
 
-        productList.forEach((productInfoDTO)->{
+        List<ReserveProductDTO> list = productList.stream().map(dto -> ReserveProductDTO.builder().productId(dto.getProductId()).quantity(dto.getQuantity()).build()).toList();
+
+        list.forEach((productInfoDTO)->{
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
             productProducer.send(event);
         });

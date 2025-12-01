@@ -38,14 +38,12 @@ public class ProductController {
     @POST
     @Path("/reserve")
     public Response reserveProducts(List<ReserveProductDTO> reserveProductDTO) {
-        System.out.printf("reserveProducts: %s\n", reserveProductDTO);
         return Response.ok(productService.getAndReserveProducts(reserveProductDTO)).build();
     }
 
     @POST
     @Path("/release")
     public Response releaseProducts(List<ReserveProductDTO> reserveProductDTO) {
-        System.out.println("releaseProducts: \n" + reserveProductDTO);
         productService.releaseProducts(reserveProductDTO);
         return Response.noContent().build();
     }
