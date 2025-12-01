@@ -8,4 +8,7 @@ import org.example.entity.Inventory;
 @ApplicationScoped
 public class InventoryRepository implements PanacheRepository<Inventory> {
 
+    public long deleteByProductId(Long productId) {
+        return delete("productId",productId);
+    }
 }
