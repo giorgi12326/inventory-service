@@ -77,6 +77,11 @@ public class ProductService {
             reserveList.add(ReserveProductDTO.builder().productId(productDTO.getProductId()).quantity(dtoQuantity).build());
         }
 
+        reserveList.forEach((productInfoDTO)->{
+            Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
+            productProducer.send(event);
+        });
+
         return reserveList;
     }
 
@@ -89,6 +94,11 @@ public class ProductService {
             productList.add(product);
         }
         productInfoRepository.persist(productList);
+
+        productList.forEach((productInfoDTO)->{
+            Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
+            productProducer.send(event);
+        });
     }
 
 
