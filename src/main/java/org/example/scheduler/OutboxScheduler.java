@@ -25,6 +25,7 @@ public class OutboxScheduler {
 
     @Scheduled(every="30s")
     public void publishPendingOutbox() {
+        System.out.println("executing scheduled task!");
         List<Outbox> pendingOutboxes = outboxRepository.list("status", OutboxStatus.PENDING);
         pendingOutboxes.forEach((outbox)->{
             productProducer.send(jsonb.fromJson(outbox.getEvent(), Event.class))
