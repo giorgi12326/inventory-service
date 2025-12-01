@@ -2,11 +2,11 @@ package org.example.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.json.bind.Jsonb;
 import jakarta.transaction.Transactional;
 import org.example.dto.*;
 import org.example.entity.Inventory;
 import org.example.entity.Outbox;
-import org.example.entity.OutboxStatus;
 import org.example.entity.ProductInfo;
 import org.example.mapper.ProductInfoMapper;
 import org.example.repository.InventoryRepository;
@@ -19,6 +19,8 @@ import java.util.List;
 
 @ApplicationScoped()
 public class ProductService {
+    @Inject
+    Jsonb jsonb;
 
     @Inject
     ProductInfoRepository productInfoRepository;
@@ -53,7 +55,7 @@ public class ProductService {
         ProductInfoDTO dto = productInfoMapper.toDTO(productEntity);
 
         Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-        productProducer.send(event);
+        outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).build());
 
         return dto;
     }
@@ -68,7 +70,7 @@ public class ProductService {
         ProductInfoDTO quantityDTO = productInfoMapper.toDTO(productEntity);
 
         Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-        outboxRepository.persist(Outbox.builder().event(event).build());
+        outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).build());
         return quantityDTO;
     }
 
@@ -93,7 +95,7 @@ public class ProductService {
 
         eventList.forEach((productInfoDTO)->{
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-            productProducer.send(event);
+            outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).build());
         });
 
         return reserveList;
@@ -113,9 +115,7 @@ public class ProductService {
 
         list.forEach((productInfoDTO)->{
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-            productProducer.send(event);
+            outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).build());
         });
     }
-
-
 }

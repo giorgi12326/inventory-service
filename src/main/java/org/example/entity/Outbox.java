@@ -16,8 +16,7 @@ public class Outbox extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Embedded
-    Event event;
+    String event;
 
     Integer attempts = 0;
 
