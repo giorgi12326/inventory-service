@@ -3,6 +3,8 @@ package org.example.scheduler;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.json.bind.Jsonb;
+import org.example.dto.Event;
 import org.example.entity.Outbox;
 import org.example.entity.OutboxStatus;
 import org.example.repository.OutboxRepository;
@@ -13,16 +15,19 @@ import java.util.List;
 @ApplicationScoped
 public class OutboxScheduler {
     @Inject
+    Jsonb jsonb;
+
+    @Inject
     OutboxRepository outboxRepository;
 
     @Inject
     ProductProducer productProducer;
 
-    @Scheduled(every="30sec")
+    @Scheduled(every="30s")
     public void publishPendingOutbox() {
         List<Outbox> pendingOutboxes = outboxRepository.list("status", OutboxStatus.PENDING);
         pendingOutboxes.forEach((outbox)->{
-            productProducer.send(outbox.getEvent())
+            productProducer.send(jsonb.fromJson(outbox.getEvent(), Event.class))
                 .whenComplete((v, ex) -> {
                     if (ex != null) {
                         System.out.println("sending Failed on attempt: " + outbox.getAttempts());
