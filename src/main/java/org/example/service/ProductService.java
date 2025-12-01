@@ -44,7 +44,13 @@ public class ProductService {
         inventory.getProducts().add(productEntity);
 
         productInfoRepository.persist(productEntity);
-        return productInfoMapper.toDTO(productEntity);
+
+        ProductInfoDTO dto = productInfoMapper.toDTO(productEntity);
+
+        Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
+        productProducer.send(event);
+
+        return dto;
     }
 
     @Transactional
@@ -55,6 +61,7 @@ public class ProductService {
         productInfoRepository.persist(productEntity);
 
         ProductInfoDTO quantityDTO = productInfoMapper.toDTO(productEntity);
+
         Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
         productProducer.send(event);
         return quantityDTO;
@@ -63,6 +70,7 @@ public class ProductService {
     @Transactional
     public List<ReserveProductDTO> getAndReserveProducts(List<ReserveProductDTO> reserveProductDTO) {
         List<ReserveProductDTO> reserveList = new ArrayList<>();
+        List<ReserveProductDTO> eventList = new ArrayList<>();
         for(ReserveProductDTO productDTO : reserveProductDTO) {
             ProductInfo product = productInfoRepository.findByProductId(productDTO.getProductId()).orElseThrow(() -> new RuntimeException("product Not Found with ID: " + productDTO.getProductId()));
             Integer productQuantity = product.getQuantity();
@@ -75,9 +83,10 @@ public class ProductService {
 
             productInfoRepository.persist(product);
             reserveList.add(ReserveProductDTO.builder().productId(productDTO.getProductId()).quantity(dtoQuantity).build());
+            eventList.add(ReserveProductDTO.builder().productId(productDTO.getProductId()).quantity(productQuantity-dtoQuantity).build());
         }
 
-        reserveList.forEach((productInfoDTO)->{
+        eventList.forEach((productInfoDTO)->{
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
             productProducer.send(event);
         });
