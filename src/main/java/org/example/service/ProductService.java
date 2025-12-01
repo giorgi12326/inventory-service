@@ -5,9 +5,12 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.example.dto.*;
 import org.example.entity.Inventory;
+import org.example.entity.Outbox;
+import org.example.entity.OutboxStatus;
 import org.example.entity.ProductInfo;
 import org.example.mapper.ProductInfoMapper;
 import org.example.repository.InventoryRepository;
+import org.example.repository.OutboxRepository;
 import org.example.repository.ProductInfoRepository;
 
 import java.time.Instant;
@@ -29,6 +32,8 @@ public class ProductService {
     @Inject
     ProductProducer productProducer;
 
+    @Inject
+    OutboxRepository outboxRepository;
 
     public List<ProductInfoDTO> getProducts() {
         return productInfoMapper.toDTOs(productInfoRepository.findAll().list());
@@ -63,7 +68,7 @@ public class ProductService {
         ProductInfoDTO quantityDTO = productInfoMapper.toDTO(productEntity);
 
         Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-        productProducer.send(event);
+        outboxRepository.persist(Outbox.builder().event(event).build());
         return quantityDTO;
     }
 
