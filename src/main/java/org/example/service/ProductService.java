@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import org.example.dto.*;
 import org.example.entity.Inventory;
 import org.example.entity.Outbox;
+import org.example.entity.OutboxStatus;
 import org.example.entity.ProductInfo;
 import org.example.mapper.ProductInfoMapper;
 import org.example.repository.InventoryRepository;
@@ -55,7 +56,7 @@ public class ProductService {
         ProductInfoDTO dto = productInfoMapper.toDTO(productEntity);
 
         Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-        outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).build());
+        outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
 
         return dto;
     }
@@ -70,7 +71,7 @@ public class ProductService {
         ProductInfoDTO quantityDTO = productInfoMapper.toDTO(productEntity);
 
         Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-        outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).build());
+        outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         return quantityDTO;
     }
 
@@ -95,7 +96,7 @@ public class ProductService {
 
         eventList.forEach((productInfoDTO)->{
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-            outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).build());
+            outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
 
         return reserveList;
@@ -115,7 +116,7 @@ public class ProductService {
 
         list.forEach((productInfoDTO)->{
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-            outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).build());
+            outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
     }
 }
