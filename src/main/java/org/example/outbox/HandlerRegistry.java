@@ -21,6 +21,9 @@ public class HandlerRegistry {
     @Inject
     ProductReleaseHandler productReleaseHandler;
 
+    @Inject
+    ProductCreateHandler productCreateHandler;
+
 
     @PostConstruct
     void init() {
@@ -28,6 +31,7 @@ public class HandlerRegistry {
         handlers.put("PRODUCT_UPDATE", productUpdateHandler);
         handlers.put("PRODUCTS_RELEASE", productReleaseHandler);
         handlers.put("PRODUCT_CREATE", productReleaseHandler);
+        System.out.println(handlers);
     }
 
     public EventHandler getHandler(String eventType) {
