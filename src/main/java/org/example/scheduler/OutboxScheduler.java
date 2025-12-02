@@ -37,8 +37,7 @@ public class OutboxScheduler {
         System.out.println(pendingOutboxes.size());
         pendingOutboxes.forEach((outbox)->{
             Event event = jsonb.fromJson(outbox.getEvent(), Event.class);
-            EventHandler handler = handlerRegistry.getHandler(outbox.getEvent());
-
+            EventHandler handler = handlerRegistry.getHandler(outbox.getEventType());
             handler.process(event).whenComplete((v, ex) -> {
                 if (ex != null) {
                     System.out.println("sending Failed on attempt: " + outbox.getAttempts());

@@ -30,8 +30,7 @@ public class HandlerRegistry {
         handlers.put("PRODUCTS_RESERVED", productReservedHandler);
         handlers.put("PRODUCT_UPDATE", productUpdateHandler);
         handlers.put("PRODUCTS_RELEASE", productReleaseHandler);
-        handlers.put("PRODUCT_CREATE", productReleaseHandler);
-        System.out.println(handlers);
+        handlers.put("PRODUCT_CREATE", productCreateHandler);
     }
 
     public EventHandler getHandler(String eventType) {
