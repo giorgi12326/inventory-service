@@ -56,7 +56,7 @@ public class ProductService {
         ProductInfoDTO dto = productInfoMapper.toDTO(productEntity);
 
         Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-        outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
+        outboxRepository.persist(Outbox.builder().eventType("PRODUCT_CREATE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
 
         return dto;
     }
@@ -96,7 +96,7 @@ public class ProductService {
 
         eventList.forEach((productInfoDTO)->{
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-            outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
+            outboxRepository.persist(Outbox.builder().eventType("PRODUCTS_RESERVE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
 
         return reserveList;
@@ -116,7 +116,7 @@ public class ProductService {
 
         list.forEach((productInfoDTO)->{
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-            outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
+            outboxRepository.persist(Outbox.builder().eventType("PRODUCTS_RELEASE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
     }
 }
