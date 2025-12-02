@@ -71,7 +71,7 @@ public class ProductService {
         ProductInfoDTO quantityDTO = productInfoMapper.toDTO(productEntity);
 
         Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-        outboxRepository.persist(Outbox.builder().event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
+        outboxRepository.persist(Outbox.builder().eventType("PRODUCT_UPDATE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         return quantityDTO;
     }
 
