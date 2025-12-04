@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.BadRequestException;
 import org.example.dto.*;
 import org.example.entity.*;
 import org.example.mapper.ProductInfoMapper;
@@ -12,6 +13,7 @@ import org.example.repository.IdempotencyRecordRepository;
 import org.example.repository.InventoryRepository;
 import org.example.repository.OutboxRepository;
 import org.example.repository.ProductInfoRepository;
+import org.hibernate.exception.ConstraintViolationException;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -79,7 +81,9 @@ public class ProductService {
 
     @Transactional
     public List<ReserveProductDTO> getAndReserveProducts(List<ReserveProductDTO> reserveProductDTO, String idempotencyKey) {
-
+        if(idempotencyKey==null){
+            throw new BadRequestException("missing the idempotency-key!");
+        }
         IdempotencyRecord record = IdempotencyRecord.builder()
                 .idempotencyKey(idempotencyKey)
                 .actionType("PRODUCTS_RESERVE")
@@ -88,7 +92,7 @@ public class ProductService {
         try{
             record.persist();
         }
-        catch (PersistenceException e) {
+        catch (ConstraintViolationException e) {
             IdempotencyRecord byId = idempotencyRecordRepository.findById(idempotencyKey);
             return Arrays.asList(jsonb.fromJson(byId.getResponseJson(), ReserveProductDTO[].class));
         }
