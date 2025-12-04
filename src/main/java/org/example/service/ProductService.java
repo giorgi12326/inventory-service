@@ -134,7 +134,7 @@ public class ProductService {
         }
 
         IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey.substring(11));
-        if(byId != null) throw new RuntimeException("cant compensate non existing action");
+        if(byId == null) throw new RuntimeException("cant compensate non existing action");
 
         ReserveProductDTO[] reserveProductDTO = jsonb.fromJson(byId.getRequestJson(), ReserveProductDTO[].class);
 
