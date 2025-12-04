@@ -128,18 +128,14 @@ public class ProductService {
 
     @Transactional
     public void releaseProducts(String idempotencyKey) {
-        IdempotencyRecord record = IdempotencyRecord.builder()
-                .idempotencyKey(idempotencyKey)
-                .actionType("COMPENSATION_PRODUCTS_RESERVE")
-                .build();
-        try {
-            record.persist();
-        }
-        catch (PersistenceException e) {
+        IdempotencyRecord existingOne = idempotentRecordRepository.findById(idempotencyKey);
+        if(existingOne != null){
             return;
         }
 
-        IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey.substring(11));//removed compensate-<key>
+        IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey.substring(11));
+        if(byId != null) throw new RuntimeException("cant compensate non existing action");
+
         ReserveProductDTO[] reserveProductDTO = jsonb.fromJson(byId.getRequestJson(), ReserveProductDTO[].class);
 
         List<ProductInfo> productList = new ArrayList<>();
@@ -155,5 +151,11 @@ public class ProductService {
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
             outboxRepository.persist(Outbox.builder().eventType("PRODUCTS_RELEASE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
+
+        IdempotencyRecord record = IdempotencyRecord.builder()
+                .idempotencyKey(idempotencyKey)
+                .actionType("COMPENSATION_PRODUCTS_RESERVE")
+                .build();
+        record.persist();
     }
 }
