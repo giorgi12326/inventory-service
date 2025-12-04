@@ -96,6 +96,7 @@ public class ProductService {
         }
         catch (PersistenceException e) {
             IdempotencyRecord byId = idempotencyRecordRepository.findById(idempotencyKey);
+            idempotencyRecordRepository.getEntityManager().refresh(byId);
             System.out.println(byId);
             return Arrays.asList(jsonb.fromJson(byId.getResponseJson(), ReserveProductDTO[].class));
         }
