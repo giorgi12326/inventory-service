@@ -92,9 +92,9 @@ public class ProductService {
                 .build();
         try{
             record.persist();
-            PanacheEntityBase.flush(); // VERY IMPORTANT
+            idempotencyRecordRepository.flush();
         }
-        catch (ConstraintViolationException e) {
+        catch (PersistenceException e) {
             IdempotencyRecord byId = idempotencyRecordRepository.findById(idempotencyKey);
             return Arrays.asList(jsonb.fromJson(byId.getResponseJson(), ReserveProductDTO[].class));
         }
