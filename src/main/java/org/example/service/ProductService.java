@@ -1,6 +1,6 @@
 package org.example.service;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 
 @ApplicationScoped()
@@ -40,7 +41,7 @@ public class ProductService {
     OutboxRepository outboxRepository;
 
     @Inject
-    IdempotencyRecordRepository idempotencyRecordRepository;
+    IdempotencyRecordRepository idempotentRecordRepository;
 
     public List<ProductInfoDTO> getProducts() {
         return productInfoMapper.toDTOs(productInfoRepository.findAll().list());
@@ -85,23 +86,17 @@ public class ProductService {
         if(idempotencyKey==null){
             throw new BadRequestException("missing the idempotency-key!");
         }
+
+        IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey);
+        if(byId != null){
+            return Arrays.asList(jsonb.fromJson(byId.getResponseJson(), ReserveProductDTO[].class));
+        }
+
         IdempotencyRecord record = IdempotencyRecord.builder()
                 .idempotencyKey(idempotencyKey)
                 .actionType("PRODUCTS_RESERVE")
                 .requestJson(jsonb.toJson(reserveProductDTO))
                 .build();
-        try{
-            record.persist();
-            idempotencyRecordRepository.flush();
-        }
-        catch (ConstraintViolationException  e) {
-            System.out.println("in catch");
-            IdempotencyRecord byId = idempotencyRecordRepository.findById(idempotencyKey);
-            System.out.println(byId);
-            idempotencyRecordRepository.getEntityManager().refresh(byId);
-            System.out.println(byId);
-            return Arrays.asList(jsonb.fromJson(byId.getResponseJson(), ReserveProductDTO[].class));
-        }
 
         List<ReserveProductDTO> reserveList = new ArrayList<>();
         List<ReserveProductDTO> eventList = new ArrayList<>();
@@ -126,6 +121,7 @@ public class ProductService {
         });
 
         record.setResponseJson(jsonb.toJson(reserveList));
+        record.persist();
 
         return reserveList;
     }
@@ -143,7 +139,7 @@ public class ProductService {
             return;
         }
 
-        IdempotencyRecord byId = idempotencyRecordRepository.findById(idempotencyKey.substring(11));//removed compensate-<key>
+        IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey.substring(11));//removed compensate-<key>
         ReserveProductDTO[] reserveProductDTO = jsonb.fromJson(byId.getRequestJson(), ReserveProductDTO[].class);
 
         List<ProductInfo> productList = new ArrayList<>();
