@@ -5,16 +5,10 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.transaction.Transactional;
-import org.example.dto.Event;
-import org.example.dto.EventType;
 import org.example.dto.InventoryRequestDTO;
 import org.example.dto.ProductInfoDTO;
-import org.example.entity.ProductInfo;
-import org.example.repository.ProductInfoRepository;
 import org.example.service.InventoryService;
 import org.example.service.ProductService;
-
-import java.time.Instant;
 
 @Singleton
 public class Initializer {

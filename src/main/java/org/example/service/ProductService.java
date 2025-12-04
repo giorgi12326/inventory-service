@@ -3,20 +3,21 @@ package org.example.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
+import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 import org.example.dto.*;
-import org.example.entity.Inventory;
-import org.example.entity.Outbox;
-import org.example.entity.OutboxStatus;
-import org.example.entity.ProductInfo;
+import org.example.entity.*;
 import org.example.mapper.ProductInfoMapper;
+import org.example.repository.IdempotencyRecordRepository;
 import org.example.repository.InventoryRepository;
 import org.example.repository.OutboxRepository;
 import org.example.repository.ProductInfoRepository;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
 
 @ApplicationScoped()
 public class ProductService {
@@ -33,10 +34,10 @@ public class ProductService {
     InventoryRepository inventoryRepository;
 
     @Inject
-    ProductProducer productProducer;
+    OutboxRepository outboxRepository;
 
     @Inject
-    OutboxRepository outboxRepository;
+    IdempotencyRecordRepository idempotencyRecordRepository;
 
     public List<ProductInfoDTO> getProducts() {
         return productInfoMapper.toDTOs(productInfoRepository.findAll().list());
@@ -44,6 +45,7 @@ public class ProductService {
 
     @Transactional
     public ProductInfoDTO addProduct(ProductInfoDTO productInfoDTO) {
+
         ProductInfo productEntity = productInfoMapper.toEntity(productInfoDTO);
 
         Inventory inventory = inventoryRepository.findById(productInfoDTO.getInventoryId());
@@ -76,7 +78,21 @@ public class ProductService {
     }
 
     @Transactional
-    public List<ReserveProductDTO> getAndReserveProducts(List<ReserveProductDTO> reserveProductDTO) {
+    public List<ReserveProductDTO> getAndReserveProducts(List<ReserveProductDTO> reserveProductDTO, String idempotencyKey) {
+
+        IdempotencyRecord record = IdempotencyRecord.builder()
+                .idempotencyKey(idempotencyKey)
+                .actionType("PRODUCTS_RESERVE")
+                .requestJson(jsonb.toJson(reserveProductDTO))
+                .build();
+        try{
+            record.persist();
+        }
+        catch (PersistenceException e) {
+            IdempotencyRecord byId = idempotencyRecordRepository.findById(idempotencyKey);
+            return Arrays.asList(jsonb.fromJson(byId.getResponseJson(), ReserveProductDTO[].class));
+        }
+
         List<ReserveProductDTO> reserveList = new ArrayList<>();
         List<ReserveProductDTO> eventList = new ArrayList<>();
         for(ReserveProductDTO productDTO : reserveProductDTO) {
@@ -99,11 +115,27 @@ public class ProductService {
             outboxRepository.persist(Outbox.builder().eventType("PRODUCTS_RESERVE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
 
+        record.setResponseJson(jsonb.toJson(reserveList));
+
         return reserveList;
     }
 
     @Transactional
-    public void releaseProducts(List<ReserveProductDTO> reserveProductDTO) {
+    public void releaseProducts(String idempotencyKey) {
+        IdempotencyRecord record = IdempotencyRecord.builder()
+                .idempotencyKey(idempotencyKey)
+                .actionType("COMPENSATION_PRODUCTS_RESERVE")
+                .build();
+        try {
+            record.persist();
+        }
+        catch (PersistenceException e) {
+            return;
+        }
+
+        IdempotencyRecord byId = idempotencyRecordRepository.findById(idempotencyKey.substring(11));//removed compensate-<key>
+        ReserveProductDTO[] reserveProductDTO = jsonb.fromJson(byId.getRequestJson(), ReserveProductDTO[].class);
+
         List<ProductInfo> productList = new ArrayList<>();
         for (ReserveProductDTO dto : reserveProductDTO) {
             ProductInfo product = productInfoRepository.findByProductId(dto.getProductId()).orElseThrow(() -> new RuntimeException("product Not Found with ID: " + dto.getProductId()));
@@ -113,7 +145,6 @@ public class ProductService {
         productInfoRepository.persist(productList);
 
         List<ReserveProductDTO> list = productList.stream().map(dto -> ReserveProductDTO.builder().productId(dto.getProductId()).quantity(dto.getQuantity()).build()).toList();
-
         list.forEach((productInfoDTO)->{
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
             outboxRepository.persist(Outbox.builder().eventType("PRODUCTS_RELEASE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());

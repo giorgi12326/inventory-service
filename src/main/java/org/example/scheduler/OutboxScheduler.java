@@ -8,9 +8,6 @@ import jakarta.transaction.Transactional;
 import org.example.dto.Event;
 import org.example.entity.Outbox;
 import org.example.entity.OutboxStatus;
-import org.example.outbox.EventHandler;
-import org.example.outbox.HandlerRegistry;
-import org.example.outbox.ProductReservedHandler;
 import org.example.repository.OutboxRepository;
 import org.example.service.ProductProducer;
 
@@ -28,7 +25,7 @@ public class OutboxScheduler {
     OutboxScheduler self;
 
     @Inject
-    HandlerRegistry handlerRegistry;
+    ProductProducer productProducer;
 
     @Scheduled(every="30s")
     public void publishPendingOutbox() {
@@ -37,15 +34,13 @@ public class OutboxScheduler {
         System.out.println(pendingOutboxes.size());
         pendingOutboxes.forEach((outbox)->{
             Event event = jsonb.fromJson(outbox.getEvent(), Event.class);
-            EventHandler handler = handlerRegistry.getHandler(outbox.getEventType());
-            handler.process(event).whenComplete((v, ex) -> {
+
+            productProducer.send(event).whenComplete((v, ex) -> {
                 if (ex != null) {
                     System.out.println("sending Failed on attempt: " + outbox.getAttempts());
                     self.incrementAttempts(outbox);
                     if(outbox.getAttempts() >= 5) {
                         self.markAsFailed(outbox);
-                        handler.compensate(event);
-                        System.out.println("Abandoning Action, Marking As failing!");
                     }
                 }
                 else {
