@@ -1,5 +1,6 @@
 package org.example.service;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
@@ -91,6 +92,7 @@ public class ProductService {
                 .build();
         try{
             record.persist();
+            PanacheEntityBase.flush(); // VERY IMPORTANT
         }
         catch (ConstraintViolationException e) {
             IdempotencyRecord byId = idempotencyRecordRepository.findById(idempotencyKey);
