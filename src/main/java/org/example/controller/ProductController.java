@@ -43,9 +43,17 @@ public class ProductController {
     }
 
     @POST
+    @Path("/reserve-compensate")
+    public Response compensateReserveProducts(@HeaderParam("idempotency-key") String idempotencyKey) {
+        productService.compensateReserveProducts(idempotencyKey);
+        return Response.noContent().build();
+    }
+
+    @POST
     @Path("/release")
-    public Response releaseProducts(@HeaderParam("idempotency-key") String idempotencyKey) {
-        productService.releaseProducts(idempotencyKey);
+    public Response releaseProducts(List<ReserveProductDTO> reserveProductDTO,
+                                    @HeaderParam("idempotency-key") String idempotencyKey) {
+        productService.releaseTheseProducts(reserveProductDTO, idempotencyKey);
         return Response.noContent().build();
     }
 }

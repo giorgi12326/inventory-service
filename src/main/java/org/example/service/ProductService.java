@@ -1,10 +1,8 @@
 package org.example.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
-import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import org.example.dto.*;
@@ -14,13 +12,11 @@ import org.example.repository.IdempotencyRecordRepository;
 import org.example.repository.InventoryRepository;
 import org.example.repository.OutboxRepository;
 import org.example.repository.ProductInfoRepository;
-import org.hibernate.exception.ConstraintViolationException;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 
 @ApplicationScoped()
@@ -127,17 +123,42 @@ public class ProductService {
     }
 
     @Transactional
-    public void releaseProducts(String idempotencyKey) {
-        IdempotencyRecord existingOne = idempotentRecordRepository.findById(idempotencyKey);
-        if(existingOne != null){
-            return;
-        }
-
+    public void compensateReserveProducts(String idempotencyKey) {
         IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey.substring(11));
         if(byId == null) throw new RuntimeException("cant compensate non existing action");
 
         ReserveProductDTO[] reserveProductDTO = jsonb.fromJson(byId.getRequestJson(), ReserveProductDTO[].class);
 
+        releaseTheseProductsLogic(Arrays.stream(reserveProductDTO).toList());
+
+        IdempotencyRecord record = IdempotencyRecord.builder()
+                .idempotencyKey(idempotencyKey)
+                .actionType("COMPENSATION_PRODUCTS_RESERVE")
+                .build();
+        record.persist();
+    }
+
+    public void releaseTheseProducts(List<ReserveProductDTO> reserveProductDTO,  String idempotencyKey) {
+        if(idempotencyKey==null){
+            throw new BadRequestException("missing the idempotency-key!");
+        }
+
+        IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey);
+        if(byId != null){
+            return;
+        }
+        releaseTheseProductsLogic(reserveProductDTO);
+
+        IdempotencyRecord record = IdempotencyRecord.builder()
+                .idempotencyKey(idempotencyKey)
+                .actionType("PRODUCTS_RESERVE")
+                .requestJson(jsonb.toJson(reserveProductDTO))
+                .build();
+        idempotentRecordRepository.persist(record);
+
+    }
+
+    public void releaseTheseProductsLogic(List<ReserveProductDTO> reserveProductDTO) {
         List<ProductInfo> productList = new ArrayList<>();
         for (ReserveProductDTO dto : reserveProductDTO) {
             ProductInfo product = productInfoRepository.findByProductId(dto.getProductId()).orElseThrow(() -> new RuntimeException("product Not Found with ID: " + dto.getProductId()));
@@ -151,11 +172,5 @@ public class ProductService {
             Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
             outboxRepository.persist(Outbox.builder().eventType("PRODUCTS_RELEASE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
-
-        IdempotencyRecord record = IdempotencyRecord.builder()
-                .idempotencyKey(idempotencyKey)
-                .actionType("COMPENSATION_PRODUCTS_RESERVE")
-                .build();
-        record.persist();
     }
 }
