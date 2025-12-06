@@ -1,5 +1,6 @@
 package org.example.service;
 
+import io.quarkus.arc.properties.IfBuildProperty;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -12,6 +13,7 @@ import org.example.repository.ProductInfoRepository;
 import java.util.Optional;
 
 @ApplicationScoped
+@IfBuildProperty(name = "kafka.enabled", stringValue = "true")
 public class ProductConsumer {
 
     @Inject

@@ -1,10 +1,12 @@
 package org.example.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
+import org.example.aop.Idempotent;
 import org.example.dto.*;
 import org.example.entity.*;
 import org.example.mapper.ProductInfoMapper;
@@ -17,6 +19,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 
 @ApplicationScoped()
@@ -124,6 +127,11 @@ public class ProductService {
 
     @Transactional
     public void compensateReserveProducts(String idempotencyKey) {
+        IdempotencyRecord previous = idempotentRecordRepository.findById(idempotencyKey);
+        if(previous != null) {
+            return;
+        }
+
         IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey.substring(11));
         if(byId == null) throw new RuntimeException("cant compensate non existing action");
 

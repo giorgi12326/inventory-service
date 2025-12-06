@@ -1,5 +1,6 @@
 package org.example.scheduler;
 
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -14,6 +15,7 @@ import org.example.service.ProductProducer;
 import java.util.List;
 
 @ApplicationScoped
+@IfBuildProperty(name = "kafka.enabled", stringValue = "true")
 public class OutboxScheduler {
     @Inject
     Jsonb jsonb;

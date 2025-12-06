@@ -21,6 +21,7 @@ public class ProductController {
 
     @GET
     public Response getProducts() {
+        System.out.println("baba");
         return Response.status(Response.Status.OK).entity(productService.getProducts()).build();
     }
 
