@@ -20,6 +20,8 @@ public class Outbox extends PanacheEntityBase {
 
     String event;
 
+    String destination;
+
     Integer attempts = 0;
 
     @Enumerated(EnumType.STRING)

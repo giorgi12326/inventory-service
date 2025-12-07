@@ -1,12 +1,10 @@
 package org.example.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
-import org.example.aop.Idempotent;
 import org.example.dto.*;
 import org.example.entity.*;
 import org.example.mapper.ProductInfoMapper;
@@ -19,7 +17,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 
 @ApplicationScoped()
@@ -60,8 +57,8 @@ public class ProductService {
 
         ProductInfoDTO dto = productInfoMapper.toDTO(productEntity);
 
-        Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-        outboxRepository.persist(Outbox.builder().eventType("PRODUCT_CREATE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
+        Event event = new Event("UPDATED", Instant.now(), productInfoDTO);
+        outboxRepository.persist(Outbox.builder().destination("product-topic").destination("order").eventType("PRODUCT_CREATE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
 
         return dto;
     }
@@ -75,31 +72,31 @@ public class ProductService {
 
         ProductInfoDTO quantityDTO = productInfoMapper.toDTO(productEntity);
 
-        Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-        outboxRepository.persist(Outbox.builder().eventType("PRODUCT_UPDATE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
+        Event event = new Event("UPDATED", Instant.now(), productInfoDTO);
+        outboxRepository.persist(Outbox.builder().destination("product-topic").eventType("PRODUCT_UPDATE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         return quantityDTO;
     }
 
     @Transactional
-    public List<ReserveProductDTO> getAndReserveProducts(List<ReserveProductDTO> reserveProductDTO, String idempotencyKey) {
+    public ReserveForOrderDTO reserveProducts(ReserveForOrderDTO reserveForOrder, String idempotencyKey) {
         if(idempotencyKey==null){
             throw new BadRequestException("missing the idempotency-key!");
         }
 
         IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey);
         if(byId != null){
-            return Arrays.asList(jsonb.fromJson(byId.getResponseJson(), ReserveProductDTO[].class));
+            return jsonb.fromJson(byId.getResponseJson(), ReserveForOrderDTO.class);
         }
 
         IdempotencyRecord record = IdempotencyRecord.builder()
                 .idempotencyKey(idempotencyKey)
                 .actionType("PRODUCTS_RESERVE")
-                .requestJson(jsonb.toJson(reserveProductDTO))
+                .requestJson(jsonb.toJson(reserveForOrder))
                 .build();
 
         List<ReserveProductDTO> reserveList = new ArrayList<>();
         List<ReserveProductDTO> eventList = new ArrayList<>();
-        for(ReserveProductDTO productDTO : reserveProductDTO) {
+        for(ReserveProductDTO productDTO : reserveForOrder.getReserveProducts()) {
             ProductInfo product = productInfoRepository.findByProductId(productDTO.getProductId()).orElseThrow(() -> new RuntimeException("product Not Found with ID: " + productDTO.getProductId()));
             Integer productQuantity = product.getQuantity();
             Integer dtoQuantity = productDTO.getQuantity();
@@ -115,14 +112,16 @@ public class ProductService {
         }
 
         eventList.forEach((productInfoDTO)->{
-            Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-            outboxRepository.persist(Outbox.builder().eventType("PRODUCTS_RESERVE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
+            Event event = new Event("UPDATED", Instant.now(), productInfoDTO);
+            outboxRepository.persist(Outbox.builder().destination("product-topic").eventType("PRODUCTS_RESERVE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
+        Event event = new Event("PRODUCTS_RESERVED", Instant.now(), reserveForOrder.getOrderId());
+        outboxRepository.persist(Outbox.builder().destination("order-topic").eventType("PRODUCTS_RESERVED").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
 
         record.setResponseJson(jsonb.toJson(reserveList));
         record.persist();
 
-        return reserveList;
+        return ReserveForOrderDTO.builder().reserveProducts(reserveList).orderId(reserveForOrder.getOrderId()).build();
     }
 
     @Transactional
@@ -177,8 +176,13 @@ public class ProductService {
 
         List<ReserveProductDTO> list = productList.stream().map(dto -> ReserveProductDTO.builder().productId(dto.getProductId()).quantity(dto.getQuantity()).build()).toList();
         list.forEach((productInfoDTO)->{
-            Event event = new Event(EventType.UPDATED, Instant.now(), productInfoDTO);
-            outboxRepository.persist(Outbox.builder().eventType("PRODUCTS_RELEASE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
+            Event event = new Event("UPDATED", Instant.now(), productInfoDTO);
+            outboxRepository.persist(Outbox.builder().destination("product-topic").eventType("PRODUCTS_RELEASE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
+    }
+
+    public void sendFailForReserveForOrder(ReserveForOrderDTO reserveForOrder) {
+        Event event = new Event("PRODUCTS_RESERVE_FAILED", Instant.now(), reserveForOrder.getOrderId());
+        outboxRepository.persist(Outbox.builder().destination("order-topic").eventType("PRODUCTS_RESERVED").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
     }
 }

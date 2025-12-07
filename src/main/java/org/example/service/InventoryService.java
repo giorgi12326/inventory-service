@@ -12,7 +12,7 @@ import org.example.repository.InventoryRepository;
 import java.util.List;
 
 @ApplicationScoped
-public class    InventoryService {
+public class InventoryService {
 
     @Inject
     InventoryRepository inventoryRepository;

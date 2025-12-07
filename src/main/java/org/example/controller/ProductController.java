@@ -36,12 +36,12 @@ public class ProductController {
         return Response.ok(productService.updateProduct(updateQuantityFromInventory)).build();
     }
 
-    @POST
-    @Path("/reserve")
-    public Response reserveProducts(List<ReserveProductDTO> reserveProductDTO,
-                                    @HeaderParam("idempotency-key") String idempotencyKey) {
-        return Response.ok(productService.getAndReserveProducts(reserveProductDTO, idempotencyKey)).build();
-    }
+//    @POST
+//    @Path("/reserve")
+//    public Response reserveProducts(List<ReserveProductDTO> reserveProductDTO,
+//            @HeaderParam("idempotency-key") String idempotencyKey) {
+//        return Response.ok(productService.reserveProducts(reserveProductDTO, idempotencyKey)).build();
+//    }
 
     @POST
     @Path("/reserve-compensate")
