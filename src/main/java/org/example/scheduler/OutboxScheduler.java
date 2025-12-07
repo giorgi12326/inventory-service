@@ -15,7 +15,6 @@ import org.example.dto.Event;
 import org.example.entity.Outbox;
 import org.example.entity.OutboxStatus;
 import org.example.repository.OutboxRepository;
-import org.example.service.ProductProducer;
 
 import java.util.List;
 import java.util.Properties;
