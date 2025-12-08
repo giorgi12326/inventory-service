@@ -1,14 +1,26 @@
 package org.example.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import lombok.*;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "product_info")
-public class ProductInfo extends PanacheEntity {
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductInfo extends PanacheEntityBase {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true)
+    private Long productId;
+
+    private Integer quantity;
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "inventory_id")
     private Inventory inventory;
-    private Long productId;
-    private Long quantity;
 }

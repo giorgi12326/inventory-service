@@ -1,0 +1,47 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [ deployment ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kubectl if not installed
+        shell: bash
+        run: |
+          if ! command -v kubectl &> /dev/null; then
+            echo "kubectl not found, installing..."
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+          else
+            echo "kubectl already installed, skipping"
+          fi
+
+      - name: Build Docker image in Minikube
+        shell: bash
+        run: |
+          # Point Docker to Minikube's Docker daemon
+          eval $(minikube -p minikube docker-env)
+          
+          # Build and tag the image
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          docker build -t inventory-service-image:$COMMIT_HASH .
+          docker tag inventory-service-image:$COMMIT_HASH inventory-service-image:latest
+          
+          # Optional: verify the image exists
+          docker images | grep inventory-service-image
+
+      - name: Deploy to Minikube
+        shell: bash
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          kubectl set image deployment/inventory-service-deployment \
+            inventory-service=inventory-service-image:$COMMIT_HASH
+          # Optional: wait until rollout is done
+          kubectl rollout status deployment/inventory-service-deployment

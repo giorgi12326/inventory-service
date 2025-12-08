@@ -1,16 +1,14 @@
 package org.example.controller;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.example.dto.InventoryRequestDTO;
 import org.example.service.InventoryService;
 
 
-@Path("/api")
+@Path("/api/inventory")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class InventoryController {
@@ -20,9 +18,11 @@ public class InventoryController {
 
     @GET
     public Response getInventories() {
-        return Response
-                .status(Response.Status.CREATED)
-                .entity(inventoryService.getInventories())
-                .build();
+        return Response.ok(inventoryService.getInventories()).build();
     }
+    @POST
+    public Response addInventory(InventoryRequestDTO inventoryRequestDTO) {
+        return Response.status(Response.Status.CREATED).entity(inventoryService.addInventory(inventoryRequestDTO)).build();
+    }
+
 }

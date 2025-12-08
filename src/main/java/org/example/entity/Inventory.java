@@ -1,22 +1,30 @@
 package org.example.entity;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
-@Table(name = "inventory")
-public class Inventory extends PanacheEntity {
-    @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductInfo> productId;
+@Data
+@EqualsAndHashCode(callSuper = false)
+public class Inventory extends PanacheEntityBase {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private Location  location;
+    private String location;
+
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductInfo> products = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {
@@ -29,3 +37,7 @@ public class Inventory extends PanacheEntity {
         updatedAt = LocalDateTime.now();
     }
 }
+
+
+
+

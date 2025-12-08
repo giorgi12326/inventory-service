@@ -1,15 +1,17 @@
 package org.example.dto;
 
-import org.example.entity.Location;
-import org.example.entity.ProductInfo;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Data
+@NoArgsConstructor
 public class InventoryResponseDTO {
-    private Location location;
+    private Long id;
+    private String location;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<ProductInfoDTO> products;
-
 }

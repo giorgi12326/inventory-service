@@ -1,7 +1,14 @@
 package org.example.dto;
 
-import org.example.entity.Location;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class InventoryRequestDTO {
-    Location location;
+    private String location;
 }
