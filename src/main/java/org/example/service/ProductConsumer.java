@@ -26,6 +26,8 @@ public class ProductConsumer {
 
     @Incoming("products")
     public void consume(Event event) {
+        System.out.println("RECIEVED EVENT OF TYPE" + event.getEventType());
+
         if(event.getEventType().equals("PRODUCT_DELETED")){
             self.productDeleted(event);
         }
