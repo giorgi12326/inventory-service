@@ -64,7 +64,6 @@ public class OutboxScheduler {
     @Transactional
     void markAsSucceeded(Outbox outbox) {
         Outbox managed = outboxRepository.findById(outbox.getId());
-
         managed.setStatus(OutboxStatus.SUCCEEDED);
         managed.persist();
     }
