@@ -34,16 +34,6 @@ public class OutboxScheduler {
     @Inject
     KafkaProducer<String, Event> kafkaProducer;
 
-    @PostConstruct
-    public void init() {
-        Properties props = new Properties();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0.kafka:9092");
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonbSerializer.class.getName());
-
-        this.kafkaProducer = new KafkaProducer<>(props);
-    }
-
     @Scheduled(every="30s")
     public void publishPendingOutbox() {
         System.out.println("executing scheduled task!");
