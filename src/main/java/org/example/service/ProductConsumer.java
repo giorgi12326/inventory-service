@@ -22,11 +22,7 @@ public class ProductConsumer {
     ProductConsumer self;
 
     @Inject
-    InventoryRepository inventoryRepository;
-    @Inject
     ProductInfoRepository productInfoRepository;
-    @Inject
-    ProductService productService;
 
     @Incoming("products")
     public void consume(Event event) {

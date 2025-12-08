@@ -78,14 +78,14 @@ public class ProductService {
     }
 
     @Transactional
-    public ReserveForOrderDTO reserveProducts(ReserveForOrderDTO reserveForOrder, String idempotencyKey) {
+    public void reserveProducts(ReserveForOrderDTO reserveForOrder, String idempotencyKey) {
         if(idempotencyKey==null){
             throw new BadRequestException("missing the idempotency-key!");
         }
 
         IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey);
         if(byId != null){
-            return jsonb.fromJson(byId.getResponseJson(), ReserveForOrderDTO.class);
+            return;
         }
 
         IdempotencyRecord record = IdempotencyRecord.builder()
@@ -94,7 +94,6 @@ public class ProductService {
                 .requestJson(jsonb.toJson(reserveForOrder))
                 .build();
 
-        List<ReserveProductDTO> reserveList = new ArrayList<>();
         List<ReserveProductDTO> eventList = new ArrayList<>();
         for(ReserveProductDTO productDTO : reserveForOrder.getReserveProducts()) {
             ProductInfo product = productInfoRepository.findByProductId(productDTO.getProductId()).orElseThrow(() -> new RuntimeException("product Not Found with ID: " + productDTO.getProductId()));
@@ -107,21 +106,18 @@ public class ProductService {
                 throw new IllegalStateException("Not enough stock for product " + product.getId());
 
             productInfoRepository.persist(product);
-            reserveList.add(ReserveProductDTO.builder().productId(productDTO.getProductId()).quantity(dtoQuantity).build());
             eventList.add(ReserveProductDTO.builder().productId(productDTO.getProductId()).quantity(productQuantity-dtoQuantity).build());
         }
 
         eventList.forEach((productInfoDTO)->{
             Event event = new Event("UPDATED", Instant.now(), productInfoDTO);
-            outboxRepository.persist(Outbox.builder().destination("product-topic").eventType("PRODUCTS_RESERVE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
+            outboxRepository.persist(Outbox.builder().destination("product-topic").eventType("PRODUCTS_RESERVED").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
         Event event = new Event("PRODUCTS_RESERVED", Instant.now(), reserveForOrder.getOrderId());
         outboxRepository.persist(Outbox.builder().destination("order-topic").eventType("PRODUCTS_RESERVED").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
 
-        record.setResponseJson(jsonb.toJson(reserveList));
         record.persist();
 
-        return ReserveForOrderDTO.builder().reserveProducts(reserveList).orderId(reserveForOrder.getOrderId()).build();
     }
 
     @Transactional

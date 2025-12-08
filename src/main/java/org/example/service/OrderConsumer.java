@@ -24,13 +24,14 @@ public class OrderConsumer {
     @Incoming("orders")
     public void consume(Event event) {
         if(event.getEventType().equals("RESERVE_PRODUCTS")){
-            self.reserveProducts(event);
+            reserveProducts(event);
         }
     }
-    public void reserveProducts(Event event) {
+
+    private void reserveProducts(Event event) {
         ReserveForOrderDTO reserveForOrder = (ReserveForOrderDTO) event.getPayload();
         try {
-            productService.reserveProducts(reserveForOrder, "inventory:" + UUID.randomUUID());
+            productService.reserveProducts(reserveForOrder, "inventory-" + UUID.randomUUID());
         }
         catch (Exception e) {
             productService.sendFailForReserveForOrder(reserveForOrder);
