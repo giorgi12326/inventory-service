@@ -63,19 +63,23 @@ public class OutboxScheduler {
 
     @Transactional
     void markAsSucceeded(Outbox outbox) {
-        outbox.setStatus(OutboxStatus.SUCCEEDED);
-        outbox.persist();
+        Outbox managed = outboxRepository.findById(outbox.getId());
+
+        managed.setStatus(OutboxStatus.SUCCEEDED);
+        managed.persist();
     }
 
     @Transactional
     void markAsFailed(Outbox outbox) {
-        outbox.setStatus(OutboxStatus.FAILED);
-        outbox.persist();
+        Outbox managed = outboxRepository.findById(outbox.getId());
+        managed.setStatus(OutboxStatus.FAILED);
+        managed.persist();
     }
 
     @Transactional
     void incrementAttempts(Outbox outbox) {
-        outbox.setAttempts(outbox.getAttempts() + 1);
-        outbox.persist();
+        Outbox managed = outboxRepository.findById(outbox.getId());
+        managed.setAttempts(managed.getAttempts() + 1);
+        managed.persist();
     }
 }
