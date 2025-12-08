@@ -14,6 +14,7 @@ public class OrderConsumer {
 
     @Incoming("orders")
     public void consume(Event event) {
+        System.out.println("RECIEVED EVENT OF TYPE" + event.getEventType());
         if(event.getEventType().equals("RESERVE_PRODUCTS")){
             reserveProducts(event);
         }
