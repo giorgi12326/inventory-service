@@ -111,7 +111,7 @@ public class ProductService {
 
         eventList.forEach((productInfoDTO)->{
             Event event = new Event("UPDATED", Instant.now(), productInfoDTO);
-            outboxRepository.persist(Outbox.builder().destination("product-topic").eventType("PRODUCTS_RESERVED").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
+            outboxRepository.persist(Outbox.builder().destination("product-topic").eventType("PRODUCTS_RESERVE").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
         });
         Event event = new Event("PRODUCTS_RESERVED", Instant.now(), reserveForOrder.getOrderId());
         outboxRepository.persist(Outbox.builder().destination("order-topic").eventType("PRODUCTS_RESERVED").event(jsonb.toJson(event)).status(OutboxStatus.PENDING).build());
@@ -130,7 +130,7 @@ public class ProductService {
         IdempotencyRecord byId = idempotentRecordRepository.findById(idempotencyKey.substring(11));
         if(byId == null) throw new RuntimeException("cant compensate non existing action");
 
-        ReserveProductDTO[] reserveProductDTO = jsonb.fromJson(byId.getRequestJson(), ReserveProductDTO[].class);
+        ReserveProductDTO[] reserveProductDTO = jsonb.fromJson(byId.getRequestJson(), ReserveForOrderDTO.class);
 
         releaseTheseProductsLogic(Arrays.stream(reserveProductDTO).toList());
 
